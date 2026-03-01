@@ -5,12 +5,11 @@ Exposes the LangGraph FNOL agent via the CopilotKit AG-UI protocol at /copilotki
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from copilotkit.integrations.fastapi import add_fastapi_endpoint
-from copilotkit import CopilotKitRemoteEndpoint, LangGraphAGUIAgent
+from ag_ui_langgraph import add_langgraph_fastapi_endpoint
+from copilotkit import LangGraphAGUIAgent
 
 from config.settings import settings
 from graph.orchestrator import fnol_graph
-from graph.state import initial_state
 
 app = FastAPI(title="FNOL AI Agents API", version="1.0.0")
 
@@ -23,18 +22,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── CopilotKit AG-UI endpoint ─────────────────────────────────────────────────
-sdk = CopilotKitRemoteEndpoint(
-    agents=[
-        LangGraphAGUIAgent(
-            name="fnolAgent",
-            description="Full FNOL automotive insurance claim processing agent",
-            graph=fnol_graph,
-        )
-    ]
+# ── AG-UI endpoint ─────────────────────────────────────────────────────────────
+agent = LangGraphAGUIAgent(
+    name="fnolAgent",
+    description="Full FNOL automotive insurance claim processing agent",
+    graph=fnol_graph,
 )
 
-add_fastapi_endpoint(app, sdk, "/copilotkit")
+add_langgraph_fastapi_endpoint(app, agent, "/copilotkit")
 
 
 # ── Health check ──────────────────────────────────────────────────────────────
