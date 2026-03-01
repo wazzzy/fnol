@@ -67,8 +67,8 @@ Incident date: {state.get('incident_date', 'N/A')}
             partial.update({
                 "policy_valid": data.get("policy_valid", False),
                 "policy_coverage_type": data.get("policy_coverage_type", ""),
-                "policy_deductible": float(data.get("policy_deductible", 0)),
-                "policy_limit": float(data.get("policy_limit", 0)),
+                "policy_deductible": float(data.get("policy_deductible") or 0),
+                "policy_limit": float(data.get("policy_limit") or 0),
                 "pipeline_stage": "damage",
             })
         except (json.JSONDecodeError, IndexError, ValueError):

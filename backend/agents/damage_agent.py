@@ -67,7 +67,7 @@ Policy coverage type: {state.get('policy_coverage_type', 'N/A')}
             data = json.loads(raw)
             partial.update({
                 "damage_severity": data.get("damage_severity", "unknown"),
-                "estimated_cost": float(data.get("estimated_cost", 0)),
+                "estimated_cost": float(data.get("estimated_cost") or 0),
                 "pipeline_stage": "fraud",
             })
         except (json.JSONDecodeError, IndexError, ValueError):
