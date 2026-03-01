@@ -3,7 +3,7 @@ import {
   ExperimentalEmptyAdapter,
   copilotRuntimeNextJSAppRouterEndpoint,
 } from "@copilotkit/runtime";
-import { HttpAgent } from "@copilotkit/runtime";
+import { HttpAgent } from "@ag-ui/client";
 import { NextRequest } from "next/server";
 
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
@@ -11,9 +11,7 @@ const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
 // AG-UI bridge: forward all agent traffic to the Python FastAPI backend
 const runtime = new CopilotRuntime({
   agents: {
-    fnolAgent: new HttpAgent({
-      url: `${backendUrl}/copilotkit`,
-    }),
+    fnolAgent: new HttpAgent({ url: `${backendUrl}/copilotkit` }),
   },
 });
 
