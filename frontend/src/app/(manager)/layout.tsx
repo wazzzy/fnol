@@ -1,8 +1,17 @@
 import { CopilotKit } from "@copilotkit/react-core";
 
-export default function ManagerLayout({ children }: { children: React.ReactNode }) {
+export default function ManagerLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" agent="fnolAgent">
+    <CopilotKit
+      runtimeUrl="/api/copilotkit"
+      agent="fnolAgent"
+      enableInspector={false}
+      showDevConsole={false}
+    >
       {children}
     </CopilotKit>
   );

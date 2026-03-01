@@ -1,9 +1,18 @@
 import { CopilotKit } from "@copilotkit/react-core";
 import "@copilotkit/react-ui/styles.css";
 
-export default function ClaimantLayout({ children }: { children: React.ReactNode }) {
+export default function ClaimantLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit" agent="fnolAgent">
+    <CopilotKit
+      runtimeUrl="/api/copilotkit"
+      agent="fnolAgent"
+      enableInspector={false}
+      showDevConsole={false}
+    >
       {children}
     </CopilotKit>
   );
