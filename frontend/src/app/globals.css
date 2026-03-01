@@ -50,3 +50,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* CopilotChat: flex column, messages scroll, input fixed at bottom */
+.copilot-chat-fixed {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.copilot-chat-fixed .copilotKitMessages {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.copilot-chat-fixed .copilotKitInputContainer {
+  flex-shrink: 0;
+}
+
+/* Upload zone portaled inside input container, above the input */
+.copilot-upload-zone {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
