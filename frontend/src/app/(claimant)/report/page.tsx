@@ -1,10 +1,13 @@
 "use client";
 
+import { useState, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useCoAgent } from "@copilotkit/react-core";
 import { CopilotChat } from "@copilotkit/react-ui";
 import { signOut } from "next-auth/react";
 import type { FNOLState, PipelineStage } from "@/lib/types/agent-state";
 import { STAGE_LABELS } from "@/lib/types/agent-state";
+import DocumentUpload, { type UploadedFile } from "@/components/DocumentUpload";
 
 const STAGE_ORDER: PipelineStage[] = [
   "intake", "document", "policy", "damage", "fraud", "triage", "stp", "comms", "complete"
@@ -95,19 +98,74 @@ function StatePanel({ state }: { state: Partial<FNOLState> }) {
           <div className="text-green-700 font-medium">${state.payment_amount.toLocaleString()}</div>
         </div>
       )}
+      {state.damage_image_urls && state.damage_image_urls.length > 0 && (
+        <div>
+          <span className="text-slate-500">Documents</span>
+          <div className="text-slate-800">{state.damage_image_urls.length} uploaded</div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function ReportPage() {
-  const { state } = useCoAgent<FNOLState>({
+  const { state, setState } = useCoAgent<FNOLState>({
     name: "fnolAgent",
     initialState: {
       pipeline_stage: "intake",
       claim_id: "",
       messages: [],
+      damage_image_urls: [],
     } as Partial<FNOLState>,
   });
+
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [portalTarget, setPortalTarget] = useState<Element | null>(null);
+
+  useEffect(() => {
+    // Wait for CopilotChat to render, then inject a portal mount point above the input
+    const timer = setTimeout(() => {
+      const container = chatContainerRef.current;
+      if (!container) return;
+      const inputContainer = container.querySelector(".copilotKitInputContainer");
+      if (!inputContainer) return;
+      // Create a mount point and insert it as the first child (before the input)
+      const mount = document.createElement("div");
+      mount.className = "copilot-upload-mount";
+      inputContainer.insertBefore(mount, inputContainer.firstChild);
+      setPortalTarget(mount);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleUpload = useCallback(
+    (file: UploadedFile) => {
+      setUploadedFiles((prev) => [...prev, file]);
+      setState((prev) => {
+        const current = prev ?? {} as FNOLState;
+        return {
+          ...current,
+          damage_image_urls: [...(current.damage_image_urls ?? []), file.url],
+        } as FNOLState;
+      });
+    },
+    [setState],
+  );
+
+  const handleRemove = useCallback(
+    (url: string) => {
+      setUploadedFiles((prev) => prev.filter((f) => f.url !== url));
+      setState((prev) => {
+        const current = prev ?? {} as FNOLState;
+        return {
+          ...current,
+          damage_image_urls: (current.damage_image_urls ?? []).filter((u) => u !== url),
+        } as FNOLState;
+      });
+    },
+    [setState],
+  );
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -134,6 +192,15 @@ export default function ReportPage() {
               <StatePanel state={state as FNOLState} />
             </div>
           )}
+
+          {uploadedFiles.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                Documents
+              </h3>
+              <p className="text-xs text-slate-600">{uploadedFiles.length} file{uploadedFiles.length !== 1 ? "s" : ""} uploaded</p>
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-t border-slate-100">
@@ -147,15 +214,28 @@ export default function ReportPage() {
       </aside>
 
       {/* Main chat area */}
-      <main className="flex-1 flex flex-col">
-        <CopilotChat
-          className="flex-1"
-          instructions="You are an FNOL intake agent. Help the user report their automotive insurance claim."
-          labels={{
-            title: "FNOL Claims Assistant",
-            initial: "Hello! I'm here to help you report your vehicle insurance claim. Can you tell me what happened?",
-          }}
-        />
+      <main className="flex-1 flex flex-col min-h-0">
+        <div ref={chatContainerRef} className="flex-1 min-h-0">
+          <CopilotChat
+            className="h-full copilot-chat-fixed"
+            instructions="You are an FNOL intake agent. Help the user report their automotive insurance claim."
+            labels={{
+              title: "FNOL Claims Assistant",
+              initial: "Hello! I'm here to help you report your vehicle insurance claim. Can you tell me what happened?",
+            }}
+          />
+        </div>
+        {portalTarget &&
+          createPortal(
+            <div className="copilot-upload-zone">
+              <DocumentUpload
+                files={uploadedFiles}
+                onUpload={handleUpload}
+                onRemove={handleRemove}
+              />
+            </div>,
+            portalTarget,
+          )}
       </main>
     </div>
   );
